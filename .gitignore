@@ -1,0 +1,29 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg
+*.egg-info
+dist
+build
+.tox
+.nox
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.egg
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/backend/venv
+
+# Nextjs
+node_modules
+.next
+.vercel
+.env.local
+.env.development.local
+.env.production.local
+.env.test.local
