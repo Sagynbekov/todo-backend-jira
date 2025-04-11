@@ -1,21 +1,19 @@
-# Use a slim Python image
+# backend/Dockerfile
 FROM python:3.10-slim
 
-# Environment variables to prevent .pyc files and buffering
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Set the working directory to /app
 WORKDIR /app
 
-# Copy everything in the build context (i.e. the backend folder) to /app
-COPY . /app/
+# 1️⃣ copy only requirements.txt first
+COPY backend/requirements.txt /app/
 
-# Install dependencies from requirements.txt
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# 2️⃣ install deps
+RUN pip install --upgrade pip && pip install -r /app/requirements.txt
 
-# Expose port 8000 (this is the port your app will run on)
+# 3️⃣ copy the rest of the backend code
+COPY backend/ /app/
+
 EXPOSE 8000
-
-# Run Gunicorn to serve the application; this assumes your Django project folder is named "core"
 CMD ["gunicorn", "core.wsgi:application", "--bind", "0.0.0.0:8000"]
