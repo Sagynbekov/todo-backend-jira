@@ -6,7 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # Set working directory in container
-WORKDIR /app
+WORKDIR /app/backend
 
 # Copy requirements file and install dependencies
 COPY backend/requirements.txt /app/
