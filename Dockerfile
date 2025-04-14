@@ -1,3 +1,5 @@
+# IT WORKS IN RENDER WHEN THE DOCKER IN THE ROOT DIRECTORY -------------------------------------
+
 # backend/Dockerfile
 FROM python:3.10-slim
 
