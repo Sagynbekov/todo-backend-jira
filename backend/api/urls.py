@@ -1,6 +1,8 @@
+# backend/api/urls.py
+
 from django.urls import path
-from .views import welcome
+from .views import projects
 
 urlpatterns = [
-    path('welcome/', welcome, name='welcome'),
+    path('projects/', projects, name='projects'),
 ]
