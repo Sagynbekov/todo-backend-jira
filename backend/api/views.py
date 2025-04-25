@@ -1,7 +1,7 @@
 # backend/api/views.py
 from rest_framework import generics
-from .models import Project
-from .serializers import ProjectSerializer
+from .models import Project, Column
+from .serializers import ProjectSerializer, ColumnSerializer
 
 class ProjectListCreateView(generics.ListCreateAPIView):
     serializer_class = ProjectSerializer
@@ -64,3 +64,20 @@ class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
         if not user_id:
             user_id = self.request.query_params.get('user_id')
         serializer.save(user_id=user_id)
+
+
+class ColumnListCreateView(generics.ListCreateAPIView):
+    serializer_class = ColumnSerializer
+    
+    def get_queryset(self):
+        project_id = self.request.query_params.get('project_id')
+        if project_id:
+            return Column.objects.filter(project_id=project_id).order_by('order')
+        return Column.objects.none()
+    
+    def perform_create(self, serializer):
+        serializer.save()
+
+class ColumnDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = ColumnSerializer
+    queryset = Column.objects.all()
