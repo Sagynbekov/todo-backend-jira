@@ -17,3 +17,15 @@ class Column(models.Model):
 
     def __str__(self):
         return f"{self.project.name} - {self.name}"
+
+
+class Task(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    column = models.ForeignKey(Column, related_name='tasks', on_delete=models.CASCADE)
+    order = models.IntegerField(default=0)  # For ordering within a column
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
