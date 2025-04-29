@@ -2,9 +2,28 @@
 
 from django.db import models
 
+class FirebaseUser(models.Model):
+    """
+    Локальное представление пользователя из Firebase Auth.
+    Храним его UID и email, чтобы иметь возможность 
+    приглашать по почте и фильтровать существующих пользователей.
+    """
+    firebase_user_id = models.CharField(max_length=128, unique=True)
+    email = models.EmailField(unique=True)
+
+    def __str__(self):
+        return self.email
+
+
 class Project(models.Model):
     name = models.CharField(max_length=100)
-    user_id = models.CharField(max_length=128)  # Store Firebase user ID
+    user_id = models.CharField(max_length=128)  # Store Firebase user ID (владелец)
+    # ------------------ добавлено:
+    members = models.ManyToManyField(
+        FirebaseUser,
+        related_name="projects",  # проекты, в которых участвует пользователь
+        blank=True,
+    )
 
     def __str__(self):
         return self.name

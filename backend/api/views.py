@@ -1,80 +1,77 @@
-# backend/api/views.py
 from rest_framework import generics
-from .models import Project, Column, Task
-from .serializers import ProjectSerializer, ColumnSerializer, TaskSerializer
+from django.db.models import Q
+from .models import Project, Column, Task, FirebaseUser
+from .serializers import ProjectSerializer, ColumnSerializer, TaskSerializer, FirebaseUserSerializer
+
+
+
+
+
 
 class ProjectListCreateView(generics.ListCreateAPIView):
     serializer_class = ProjectSerializer
-    
+
     def get_queryset(self):
-        # Get user_id from query parameters
         user_id = self.request.query_params.get('user_id')
         if user_id:
-            return Project.objects.filter(user_id=user_id)
-        return Project.objects.none()  # Return empty if no user_id
-    
+            return Project.objects.filter(
+                Q(user_id=user_id) |
+                Q(members__firebase_user_id=user_id)
+            ).distinct()
+        return Project.objects.none()
+
     def perform_create(self, serializer):
-        # Get user_id from request data
         user_id = self.request.data.get('user_id')
-        serializer.save(user_id=user_id)
+        project = serializer.save(user_id=user_id)
+        for email in self.request.data.get('members', []):
+            try:
+                member = FirebaseUser.objects.get(email=email)
+                project.members.add(member)
+            except FirebaseUser.DoesNotExist:
+                pass
 
 class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProjectSerializer
-    
-    def get_object(self):
-        # Override get_object to handle user_id filtering properly
-        queryset = self.get_queryset()
-        pk = self.kwargs.get('pk')
-        obj = queryset.filter(id=pk).first()
-        if not obj:
-            # If no object is found with user_id filter, check if it exists at all
-            # This helps with debugging
-            exists = Project.objects.filter(id=pk).exists()
-            if exists:
-                print(f"Project {pk} exists but doesn't belong to this user")
-            else:
-                print(f"Project {pk} doesn't exist at all")
-        return obj
-    
+
     def get_queryset(self):
-        # Get user_id from both query params and request data
         user_id = None
-        
-        # For GET/DELETE requests, check query params first
         if self.request.method in ['GET', 'DELETE']:
             user_id = self.request.query_params.get('user_id')
-        
-        # For PUT/PATCH requests, check request data 
         elif self.request.method in ['PUT', 'PATCH']:
-            user_id = self.request.data.get('user_id')
-            # If not in data, try query params as backup
-            if not user_id:
-                user_id = self.request.query_params.get('user_id')
-        
-        if user_id:
-            print(f"Filtering projects by user_id: {user_id}")
-            return Project.objects.filter(user_id=user_id)
-        
-        print("No user_id found, returning empty queryset")
-        return Project.objects.none()
-    
-    def perform_update(self, serializer):
-        # Preserve the user_id when updating
-        user_id = self.request.data.get('user_id')
-        if not user_id:
-            user_id = self.request.query_params.get('user_id')
-        serializer.save(user_id=user_id)
+            user_id = self.request.data.get('user_id') or self.request.query_params.get('user_id')
 
+        if user_id:
+            return Project.objects.filter(
+                Q(user_id=user_id) |
+                Q(members__firebase_user_id=user_id)
+            ).distinct()
+        return Project.objects.none()
+
+    def get_object(self):
+        queryset = self.get_queryset()
+        pk = self.kwargs.get('pk')
+        return queryset.filter(id=pk).first()
+
+    def perform_update(self, serializer):
+        project = serializer.save()
+        if 'members' in self.request.data:
+            project.members.clear()
+            for email in self.request.data.get('members', []):
+                try:
+                    member = FirebaseUser.objects.get(email=email)
+                    project.members.add(member)
+                except FirebaseUser.DoesNotExist:
+                    pass
 
 class ColumnListCreateView(generics.ListCreateAPIView):
     serializer_class = ColumnSerializer
-    
+
     def get_queryset(self):
         project_id = self.request.query_params.get('project_id')
         if project_id:
             return Column.objects.filter(project_id=project_id).order_by('order')
         return Column.objects.none()
-    
+
     def perform_create(self, serializer):
         serializer.save()
 
@@ -82,11 +79,9 @@ class ColumnDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ColumnSerializer
     queryset = Column.objects.all()
 
-
-
 class TaskListCreateView(generics.ListCreateAPIView):
     serializer_class = TaskSerializer
-    
+
     def get_queryset(self):
         column_id = self.request.query_params.get('column_id')
         if column_id:
@@ -96,3 +91,30 @@ class TaskListCreateView(generics.ListCreateAPIView):
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
+
+
+
+
+
+from rest_framework import generics
+from .models import FirebaseUser
+from .serializers import FirebaseUserSerializer
+
+class FirebaseUserListCreateView(generics.ListCreateAPIView):
+    queryset = FirebaseUser.objects.all()
+    serializer_class = FirebaseUserSerializer
+
+    def get_queryset(self):
+        email = self.request.query_params.get('email')
+        if email:
+            return FirebaseUser.objects.filter(email=email)
+        return FirebaseUser.objects.none()
+
+    def perform_create(self, serializer):
+        uid = serializer.validated_data['firebase_user_id']
+        email = serializer.validated_data['email']
+        instance, _ = FirebaseUser.objects.get_or_create(
+            firebase_user_id=uid,
+            defaults={'email': email}
+        )
+        serializer.instance = instance
