@@ -10,6 +10,7 @@ class FirebaseUser(models.Model):
     """
     firebase_user_id = models.CharField(max_length=128, unique=True)
     email = models.EmailField(unique=True)
+    profile_photo = models.ImageField(upload_to='profile_photos/', null=True, blank=True)
 
     def __str__(self):
         return self.email
@@ -45,6 +46,9 @@ class Task(models.Model):
     order = models.IntegerField(default=0)  # For ordering within a column
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    # Match existing database fields - don't change these field definitions
+    creator_id = models.CharField(max_length=128, null=True, blank=True)
+    creator_email = models.EmailField(null=True, blank=True)
 
     def __str__(self):
         return self.title

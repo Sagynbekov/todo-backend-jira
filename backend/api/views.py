@@ -1,9 +1,9 @@
 from rest_framework import generics
 from django.db.models import Q
+from rest_framework.response import Response
 from .models import Project, Column, Task, FirebaseUser
 from .serializers import ProjectSerializer, ColumnSerializer, TaskSerializer, FirebaseUserSerializer
-
-
+from rest_framework.parsers import MultiPartParser, FormParser
 
 
 
@@ -87,18 +87,16 @@ class TaskListCreateView(generics.ListCreateAPIView):
         if column_id:
             return Task.objects.filter(column_id=column_id).order_by('order')
         return Task.objects.none()
+    
+    def perform_create(self, serializer):
+        # Save the creator information when creating a task
+        creator_id = self.request.data.get('user_id')
+        creator_email = self.request.data.get('email', '')
+        serializer.save(creator_id=creator_id, creator_email=creator_email)
 
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
-
-
-
-
-
-from rest_framework import generics
-from .models import FirebaseUser
-from .serializers import FirebaseUserSerializer
 
 class FirebaseUserListCreateView(generics.ListCreateAPIView):
     queryset = FirebaseUser.objects.all()
@@ -118,3 +116,50 @@ class FirebaseUserListCreateView(generics.ListCreateAPIView):
             defaults={'email': email}
         )
         serializer.instance = instance
+        
+    def list(self, request, *args, **kwargs):
+        # Override the list method to add full URLs for profile photos
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        data = serializer.data
+        
+        # Add full URLs for profile photos
+        for user_data in data:
+            if user_data.get('profile_photo'):
+                if not user_data['profile_photo'].startswith('http'):
+                    host = request.get_host()
+                    protocol = 'https' if request.is_secure() else 'http'
+                    user_data['profile_photo'] = f"{protocol}://{host}{user_data['profile_photo']}"
+        
+        return Response(data)
+    
+
+
+class UserProfilePhotoView(generics.UpdateAPIView):
+    """
+    Заливка profile_photo в Cloudinary (через cloudinary_storage)
+    и возврат обновлённого объекта с готовым URL.
+    """
+    parser_classes = [MultiPartParser, FormParser]
+    serializer_class = FirebaseUserSerializer
+
+    def get_object(self):
+        user_id = self.request.query_params.get('user_id')
+        obj, _ = FirebaseUser.objects.get_or_create(
+            firebase_user_id=user_id,
+            defaults={'email': self.request.data.get('email', '')}
+        )
+        return obj
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        # Если пришёл файл — сохраняем в Cloudinary
+        if 'profile_photo' in request.FILES:
+            instance.profile_photo = request.FILES['profile_photo']
+            instance.save()
+
+        # Возвращаем только готовый URL в виде JSON
+        return Response({
+            'profile_photo': instance.profile_photo.url
+        })

@@ -2,3 +2,6 @@ Django>=3.2
 djangorestframework
 gunicorn
 django-cors-headers
+python-dotenv
+cloudinary
+django-cloudinary-storage

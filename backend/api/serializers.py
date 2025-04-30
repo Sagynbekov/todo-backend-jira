@@ -6,7 +6,7 @@ from .models import Project, Column, Task, FirebaseUser
 class FirebaseUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = FirebaseUser
-        fields = ['firebase_user_id', 'email']
+        fields = ['firebase_user_id', 'email', 'profile_photo']
 
 class ProjectSerializer(serializers.ModelSerializer):
     members = serializers.SlugRelatedField(
@@ -29,4 +29,4 @@ class ColumnSerializer(serializers.ModelSerializer):
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
-        fields = ['id', 'title', 'description', 'column', 'order', 'created_at', 'updated_at']
+        fields = ['id', 'title', 'description', 'column', 'order', 'created_at', 'updated_at', 'creator_id', 'creator_email']

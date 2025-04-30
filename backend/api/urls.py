@@ -4,7 +4,8 @@ from django.urls import path
 from .views import (
     ProjectListCreateView, ProjectDetailView,
     ColumnListCreateView, ColumnDetailView,
-    TaskListCreateView, TaskDetailView, FirebaseUserListCreateView
+    TaskListCreateView, TaskDetailView, FirebaseUserListCreateView,
+    UserProfilePhotoView
 )
 
 urlpatterns = [
@@ -15,4 +16,5 @@ urlpatterns = [
     path('tasks/', TaskListCreateView.as_view(), name='task-list'),
     path('tasks/<int:pk>/', TaskDetailView.as_view(), name='task-detail'),
     path('firebase-users/', FirebaseUserListCreateView.as_view(), name='firebaseuser-list-create'),
+    path('profile-photo/', UserProfilePhotoView.as_view(), name='profile-photo-update'),
 ]
