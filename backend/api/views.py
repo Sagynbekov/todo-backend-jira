@@ -89,10 +89,13 @@ class TaskListCreateView(generics.ListCreateAPIView):
         return Task.objects.none()
     
     def perform_create(self, serializer):
-        # Save the creator information when creating a task
-        creator_id = self.request.data.get('user_id')
-        creator_email = self.request.data.get('email', '')
-        serializer.save(creator_id=creator_id, creator_email=creator_email)
+        creator_uid = self.request.data.get('creator_id')  # uid FirebaseUser.firebase_user_id
+        # найдём объект FirebaseUser по uid
+        try:
+            user = FirebaseUser.objects.get(firebase_user_id=creator_uid)
+        except FirebaseUser.DoesNotExist:
+            user = None
+        serializer.save(creator=user)
 
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer

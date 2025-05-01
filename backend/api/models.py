@@ -43,12 +43,21 @@ class Task(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     column = models.ForeignKey(Column, related_name='tasks', on_delete=models.CASCADE)
-    order = models.IntegerField(default=0)  # For ordering within a column
+    order = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    # Match existing database fields - don't change these field definitions
-    creator_id = models.CharField(max_length=128, null=True, blank=True)
-    creator_email = models.EmailField(null=True, blank=True)
+
+    # Удаляем эти два поля:
+    # creator_id = models.CharField(max_length=128, null=True, blank=True)
+    # creator_email = models.EmailField(null=True, blank=True)
+
+    # И добавляем связь на FirebaseUser:
+    creator = models.ForeignKey(
+        FirebaseUser,
+        related_name='tasks',
+        on_delete=models.CASCADE,
+        null=True,    # или blank=True, если нужна опциональность
+    )
 
     def __str__(self):
         return self.title
