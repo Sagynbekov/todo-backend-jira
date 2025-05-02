@@ -107,8 +107,11 @@ class FirebaseUserListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         email = self.request.query_params.get('email')
+        uid   = self.request.query_params.get('firebase_user_id')
         if email:
             return FirebaseUser.objects.filter(email=email)
+        if uid:
+            return FirebaseUser.objects.filter(firebase_user_id=uid)
         return FirebaseUser.objects.none()
 
     def perform_create(self, serializer):
