@@ -46,6 +46,7 @@ class Task(models.Model):
     order = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    completed = models.BooleanField(default=False)  # Added completed field
 
     # Удаляем эти два поля:
     # creator_id = models.CharField(max_length=128, null=True, blank=True)

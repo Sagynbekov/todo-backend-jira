@@ -30,5 +30,5 @@ class TaskSerializer(serializers.ModelSerializer):
     creator_email = serializers.EmailField(source='creator.email', read_only=True)
     class Meta:
         model = Task
-        fields = ['id', 'title', 'description', 'column', 'order', 'created_at', 'updated_at', 'creator', 'creator_email']
+        fields = ['id', 'title', 'description', 'column', 'order', 'created_at', 'updated_at', 'creator', 'creator_email', 'completed']
         read_only_fields = ['creator_email']
