@@ -48,16 +48,21 @@ class Task(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     completed = models.BooleanField(default=False)  # Added completed field
 
-    # Удаляем эти два поля:
-    # creator_id = models.CharField(max_length=128, null=True, blank=True)
-    # creator_email = models.EmailField(null=True, blank=True)
-
     # И добавляем связь на FirebaseUser:
     creator = models.ForeignKey(
         FirebaseUser,
         related_name='tasks',
         on_delete=models.CASCADE,
         null=True,    # или blank=True, если нужна опциональность
+    )
+    
+    # Добавляем поле для отслеживания, кто выполнил задачу
+    completed_by = models.ForeignKey(
+        FirebaseUser,
+        related_name='completed_tasks',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
     )
 
     def __str__(self):

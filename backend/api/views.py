@@ -100,6 +100,27 @@ class TaskListCreateView(generics.ListCreateAPIView):
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer
     queryset = Task.objects.all()
+    
+    def perform_update(self, serializer):
+        # Check if the task is being marked as completed
+        if 'completed' in self.request.data and self.request.data['completed'] == True:
+            # Get the current task object
+            task = self.get_object()
+            
+            # Only update completed_by if the task is being newly completed
+            if not task.completed:
+                # Get current user
+                user_id = self.request.data.get('user_id') or self.request.query_params.get('user_id')
+                if user_id:
+                    try:
+                        user = FirebaseUser.objects.get(firebase_user_id=user_id)
+                        serializer.save(completed_by=user)
+                        return
+                    except FirebaseUser.DoesNotExist:
+                        pass
+        
+        # For any other updates or if user not found
+        serializer.save()
 
 class FirebaseUserListCreateView(generics.ListCreateAPIView):
     queryset = FirebaseUser.objects.all()
