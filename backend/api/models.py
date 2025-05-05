@@ -47,6 +47,7 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     completed = models.BooleanField(default=False)  # Added completed field
+    deadline = models.DateField(null=True, blank=True)  # Add deadline field
 
     # И добавляем связь на FirebaseUser:
     creator = models.ForeignKey(
